@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: otel
+      POSTGRES_PASSWORD: otel
+      POSTGRES_DB: otel_demo
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otel"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  service-a:
+    build:
+      context: ./services/service_a
+    environment:
+      PORT: "8000"
+      SERVICE_B_URL: "http://service-b:8001"
+      DATABASE_URL: "postgresql+psycopg2://otel:otel@postgres:5432/otel_demo"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  service-b:
+    build:
+      context: ./services/service_b
+    environment:
+      PORT: "8001"
+      DATABASE_URL: "postgresql+psycopg2://otel:otel@postgres:5432/otel_demo"
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
