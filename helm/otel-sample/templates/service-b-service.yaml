@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "otel-sample.fullname" . }}-service-b
+  labels:
+    {{- include "otel-sample.labels" . | nindent 4 }}
+    app.kubernetes.io/component: service-b
+spec:
+  type: {{ .Values.serviceB.service.type }}
+  selector:
+    {{- include "otel-sample.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: service-b
+  ports:
+    - port: {{ .Values.serviceB.service.port }}
+      targetPort: {{ .Values.serviceB.service.port }}
+      protocol: TCP
+      name: http

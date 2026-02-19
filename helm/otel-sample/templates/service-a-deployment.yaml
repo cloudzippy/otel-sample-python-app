@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-sample.fullname" . }}-service-a
+  labels:
+    {{- include "otel-sample.labels" . | nindent 4 }}
+    app.kubernetes.io/component: service-a
+  {{- with .Values.serviceA.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.serviceA.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "otel-sample.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: service-a
+  template:
+    metadata:
+      labels:
+        {{- include "otel-sample.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: service-a
+      {{- with .Values.serviceA.deploymentAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      containers:
+        - name: service-a
+          image: "{{ .Values.serviceA.image.repository }}:{{ .Values.serviceA.image.tag }}"
+          imagePullPolicy: {{ .Values.serviceA.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.serviceA.service.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.serviceA.env.port | quote }}
+            - name: SERVICE_B_URL
+              value: {{ .Values.serviceA.env.serviceBUrl | quote }}
+            - name: DATABASE_URL
+              value: {{ printf "postgresql+psycopg2://%s:%s@%s-postgres:%d/%s" .Values.postgres.auth.user .Values.postgres.auth.password (include "otel-sample.fullname" .) .Values.postgres.service.port .Values.postgres.auth.database | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,59 @@
+serviceA:
+  image:
+    repository: service-a
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  env:
+    port: "8000"
+    serviceBUrl: "http://service-b:8001"
+  deploymentAnnotations: {}
+
+serviceB:
+  image:
+    repository: service-b
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8001
+  env:
+    port: "8001"
+  deploymentAnnotations: {}
+
+postgres:
+  image:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+  auth:
+    user: otel
+    password: otel
+    database: otel_demo
+  service:
+    type: ClusterIP
+    port: 5432
+  persistence:
+    enabled: true
+    size: 1Gi
+  deploymentAnnotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: service-a.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
